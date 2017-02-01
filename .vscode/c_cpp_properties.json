@@ -18,7 +18,7 @@
         },
         {
             "name": "Win32",
-            "includePath": ["c:/MinGW/include"],
+            "includePath": ["c:/MinGW/include", "c:/MinGW/lib/gcc/mingw32/5.3.0/include/c++"],
             "browse" : {
                 "limitSymbolsToIncludedHeaders" : true,
                 "databaseFilename" : ""

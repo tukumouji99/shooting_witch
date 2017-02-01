@@ -47,24 +47,6 @@ void display(void)
 
     /* 参考: OpenGL で折れ線を描画するには次のように書く */
  
-    glColor3ub(10, 255, 127);   // 適当な色を指定…頂点ごとに色を指定することもできる
- 
-    /* 折れ線の頂点は glBegin と glEnd の間に並べて書く */
-    glBegin(GL_LINE_STRIP); // 折れ線の描画の開始
-    glVertex2i(69, 421);        // 折れ線の頂点の座標を指定
-    glVertex2i(418, 415);       // 折れ線の頂点の座標を指定
-    glVertex2i(252, 329);       // 折れ線の頂点の座標を指定
-    glVertex2i(271, 167);       // 折れ線の頂点の座標を指定
-    glVertex2i(150, 37);        // 折れ線の頂点の座標を指定
-    glEnd();        // 折れ線の描画の終了
- 
-    /* 頂点に半径 5 の円を表示 */
-    DrawCircle(69, 421, 5);
-    DrawCircle(418, 415, 5);
-    DrawCircle(252, 329, 5);
-    DrawCircle(271, 167, 5);
-    DrawCircle(150, 37, 5);
- 
     glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
 }
  
