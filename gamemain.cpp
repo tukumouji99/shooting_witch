@@ -45,8 +45,8 @@ void display(void)
     /* ウィンドウを消去 … glClearColor で指定した色で塗りつぶし */
     glClear(GL_COLOR_BUFFER_BIT);
 
-    /* 参考: OpenGL で折れ線を描画するには次のように書く */
- 
+   
+   
     glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
 }
  
