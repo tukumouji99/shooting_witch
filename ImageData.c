@@ -22,7 +22,7 @@ int AllocateImageData(ImageData *img, int w, int h, int channels)
 	img->width = w;
 	img->height = h;
 	img->channels = channels;
-	img->data = malloc(sizeof(unsigned char)*w*h*channels);
+	img->data = (unsigned char *)malloc(sizeof(unsigned char)*w*h*channels);
 
 	if ( img->data == NULL )
 	{

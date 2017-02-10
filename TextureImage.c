@@ -117,7 +117,7 @@ void ReleaseTexture(void)
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void DrawTexturedQuad(TextureImage *tex, int xi, int yi, int w, int h)
+void DrawTexturedQuad_i(TextureImage *tex, int xi, int yi, int w, int h)
 {  
   glError();
 
@@ -129,6 +129,27 @@ void DrawTexturedQuad(TextureImage *tex, int xi, int yi, int w, int h)
   glTexCoord2f(1, 0); glVertex2i(xi+w, yi);
   glTexCoord2f(1, 1); glVertex2i(xi+w, yi+h);
   glTexCoord2f(0, 1); glVertex2i(xi,   yi+h);
+  glEnd();
+
+  ReleaseTexture();
+  glDisable(GL_TEXTURE_2D);
+
+  glError();
+}
+
+void DrawTexturedQuad_d(TextureImage *tex, double xi, double yi, double w, double h)
+{  
+  // printf("xi: %lf\n",xi);
+  glError();
+
+  glEnable(GL_TEXTURE_2D);
+  BindTexture(tex);
+
+  glBegin(GL_QUADS);
+  glTexCoord2f(0, 0); glVertex2d(xi,   yi);
+  glTexCoord2f(1, 0); glVertex2d(xi+w, yi);
+  glTexCoord2f(1, 1); glVertex2d(xi+w, yi+h);
+  glTexCoord2f(0, 1); glVertex2d(xi,   yi+h);
   glEnd();
 
   ReleaseTexture();

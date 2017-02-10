@@ -3,21 +3,58 @@
 #include<cmath>
 #include<GL/glut.h>
 
+#include"ImageData.h"
+#include"ImageIO.h"
+#include"TextureImage.h"
+#include"GenericTimer.h"
+
 #include"gamefunctions.h"
+
+#define VELO_SPEED 2
+
+ImageData g_Image;
+TextureImage g_Tex;
+int g_ImagePosX = 256;	/* 画像の左下点の、初期 x 座標 */
+int g_ImagePosY = 0;	/* 画像の左下点の、初期 y 座標 */
 
 int g_WindowWidth = 1200;    /* ウィンドウの横幅 */
 int g_WindowHeight = 660;   /* ウィンドウの縦幅 */
+int g_ImageVelocityX = 0;	/* 座標更新時の、x 方向の移動距離 */
+int g_ImageVelocityY = 0;	/* 座標更新時の、y 方向の移動距離 */
+int g_AnimationDulation = 10;/* 何ミリ秒ごとに更新するかの刻み幅 */
 
-int g_CurveCurrentIndex = 0;    /* 折れ線の配列において、いま操作している折れ線のインデックス */
+double g_PrevTime = 0.0;
+
+// int g_CurveCurrentIndex = 0;    /* 折れ線の配列において、いま操作している折れ線のインデックス */
+
+extern bool keyup,
+     keyright,
+     keydown,
+     keyleft;
+
+Object heroin;
 
 void init(void)
 {
-    glClearColor(1.0, 1.0, 1.0, 1.0);   /* ウィンドウを消去するときの色を設定 */
-    glLineWidth(3.f);                   /* 線の太さを指定 */
-    glEnable(GL_LINE_SMOOTH);           /* 線をなめらかに表示するための設定 */
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    //白
+    // glClearColor(1.0, 1.0, 1.0, 1.0);   /* ウィンドウを消去するときの色を設定 */
+    glClearColor(0, 0, 0, 0);
+    // glLineWidth(3.f);                   /* 線の太さを指定 */
+    // glEnable(GL_LINE_SMOOTH);           /* 線をなめらかに表示するための設定 */
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+
+    InitImageData(&heroin.img);    /* 画像データを初期化 */
+
+    if(LoadPPMImage("test.ppm" ,&heroin.img)){
+        FlipImageData(&heroin.img);    /* 画像の上下を反転する */
+        MakeTextureFromImage(&heroin.tex, &heroin.img);
+    }
+    heroin.posx = 0;
+    heroin.posy = 0;
+
+    StartTimer();
 }
 
 void DrawCircle(int xi, int yi, int radius)
@@ -45,11 +82,56 @@ void display(void)
     /* ウィンドウを消去 … glClearColor で指定した色で塗りつぶし */
     glClear(GL_COLOR_BUFFER_BIT);
 
+    if( IsImageDataAllocated(&heroin.img) && IsTextureAvailable(&heroin.tex)){
+        glColor3f(1,1,1);
+        DrawTexturedQuad_d(&heroin.tex, heroin.posx, heroin.posy, heroin.img.width, heroin.img.height);
+    }
    
-   
-    glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
+    glutSwapBuffers();
+    // glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
 }
  
+/* 定期的に呼び出され、画像の位置を更新するための関数 */
+void idle(void)
+{
+	/* もし前回の更新から一定時間が過ぎていたら */
+	if ( GetRapTime(g_PrevTime) >= g_AnimationDulation )
+	{
+	  /* めりこみを許す */
+	  int offset = 0;
+	  
+		/* x, y 座標を更新 */
+		// g_ImagePosX += g_ImageVelocityX;
+		// g_ImagePosY += g_ImageVelocityY;
+
+        moveObject(&heroin, VELO_SPEED);
+		
+        /* 画面の外に出ないように座標を調整 */
+		if (heroin.posx < -offset)
+		{
+			heroin.posx = -offset;
+		}
+		else if (g_WindowWidth - heroin.img.width + offset <= heroin.posx)
+		{
+			heroin.posx = g_WindowWidth - heroin.img.width + offset;
+		}
+
+		if (heroin.posy < -offset)
+		{
+			heroin.posy = -offset;
+		}
+		else if (g_WindowHeight - heroin.img.height + offset <= heroin.posy)
+		{
+			heroin.posy = g_WindowHeight - heroin.img.height + offset;
+		}
+
+		/* 最終更新時刻を記録する */
+		g_PrevTime = GetTime();
+	}
+
+	display();
+}
+
 /* キーボード入力のためのコールバック関数 */
 void keyboard(unsigned char key, int x, int y)
 {
@@ -57,21 +139,6 @@ void keyboard(unsigned char key, int x, int y)
 
     switch (key)
     {
-    case ' ':   /* スペースキーを押すと点をクリア */
-    
-        g_CurveCurrentIndex = 0;
- 
-        printf("curves cleared\n");
-        break;
-    case 's':   /* 's' を押すとファイルに折れ線データを書き込み */
-        /* 折れ線データをファイルに保存する次の関数を自分で実装 */
-            printf("%d curves saved in \"\"\n", g_CurveCurrentIndex+1);
-        break;
-    case 'l':   /* 'l' (エル) を押すとファイルから折れ線データを読み込み */
-        /* 折れ線データをファイルから読み込む次の関数を自分で実装 */
-            g_CurveCurrentIndex = (nCurves <= 0) ? 0 : nCurves-1;
-           printf("%d curves loaded from \"\"\n", nCurves);
-        break;
     case 'q':   /* キーボードの 'q' 'Q' 'ESC' を押すとプログラム終了 */
     case 'Q':
     case '\033':
@@ -82,68 +149,39 @@ void keyboard(unsigned char key, int x, int y)
     glutPostRedisplay();    /* ウィンドウ描画関数を呼ぶ */
 }
 
+void specialkey(int key, int x, int y){
+    if(key == GLUT_KEY_UP){
+        keyup = true;
+    }
+    if(key == GLUT_KEY_DOWN){
+        keydown = true;
+    }
+    if(key == GLUT_KEY_RIGHT){
+        keyright = true;
+    }
+    if(key == GLUT_KEY_LEFT){
+        keyleft = true; 
+    }
+}
+
+void specialkeyup(int key, int x, int y){
+    if( key == GLUT_KEY_UP ){
+        keyup = false;
+    }
+    if( key == GLUT_KEY_DOWN ){
+        keydown = false;
+    }
+    if( key == GLUT_KEY_LEFT ){
+        keyleft = false;
+    }
+    if( key == GLUT_KEY_RIGHT ){
+        keyright = false;
+    }
+}
+
 /* マウス入力のためのコールバック関数 */
 void mouse(int button, int state, int x, int _y)
 {
-    int y = g_WindowHeight - _y;
-
-    if (state == GLUT_DOWN) /* もしマウスのボタンがクリックされたら */
-    {
-        const int isShiftPressed = glutGetModifiers() & GLUT_ACTIVE_SHIFT;
-        const int isCtrlPressed = glutGetModifiers() & GLUT_ACTIVE_CTRL;
-
-        if ( isShiftPressed ) /* マウスクリック時に Shift キーが押されていたら */
-        {
-            int i;
-
-            for (i=0; i<=g_CurveCurrentIndex; i++)
-            {
-                /* クリックした点 (x,y) から半径 5 ピクセル以内に頂点があれば削除 */
-                /* 次の関数を自分で実装する */
-                    break;
-            }
-        }
-        else if ( isCtrlPressed ) /* マウスクリック時に Ctrl キーが押されていたら */
-        {
-            if ( g_CurveCurrentIndex < 1024-1 )
-            {
-                unsigned char r = rand() % 256;
-                unsigned char g = rand() % 256;
-                unsigned char b = rand() % 256;
-
-                g_CurveCurrentIndex++;
-
-                /* 折れ線に色を設定する関数を自分で実装 */
-         
-                /* 折れ線の末尾にクリックした点を頂点として追加する関数を自分で実装 */
-         
-                printf("new curve, added point at (%d,%d), color = (%d,%d,%d)\n", x, y, r, g, b);
-            }
-        }
-        else
-        {
-            if ( g_CurveCurrentIndex <= 1024-1 )
-            {
-                /* 折れ線に頂点がまだ登録されていないかどうかを判定する関数を自分で実装 */
-                    unsigned char r = rand() % 256;
-                    unsigned char g = rand() % 256;
-                    unsigned char b = rand() % 256;
-
-                    /* 折れ線に色を設定する関数を自分で実装 */
-            
-                    /* 折れ線の末尾にクリックした点を頂点として追加する関数を自分で実装 */
-            
-                    printf("added point at (%d,%d), color = (%d,%d,%d)\n", x, y, r, g, b);
-            }
-            else
-            {
-                    /* 折れ線の末尾にクリックした点を頂点として追加する関数を自分で実装 */
-            
-                    printf("added point at (%d,%d)\n", x, y);
-            }
-        }
-    }
-
     glutPostRedisplay();    /* ウィンドウ描画関数を呼ぶ */
 }
  
@@ -172,9 +210,12 @@ int main(int argc, char *argv[])
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA);
     glutInitWindowSize(g_WindowWidth, g_WindowHeight);
-    glutCreateWindow("Curves");
+    glutCreateWindow("shooting_witch");
     glutDisplayFunc(display);
+    glutIdleFunc(idle);
     glutKeyboardFunc(keyboard);
+    glutSpecialFunc(specialkey);
+    glutSpecialUpFunc(specialkeyup);
     glutMouseFunc(mouse);
     glutReshapeFunc(reshape);
     init();

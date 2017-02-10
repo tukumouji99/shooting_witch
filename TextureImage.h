@@ -21,7 +21,10 @@ void BindTexture(TextureImage *tex);
 
 void ReleaseTexture(void);
 
-void DrawTexturedQuad(TextureImage *tex, int xi, int yi, int w, int h);
+void DrawTexturedQuad_i(TextureImage *tex, int xi, int yi, int w, int h);
+
+void DrawTexturedQuad_d(TextureImage *tex, double xi, double yi, double w, double h);
+
 
 #endif
 
