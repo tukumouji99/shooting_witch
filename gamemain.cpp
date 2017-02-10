@@ -27,18 +27,20 @@ double g_PrevTime = 0.0;
 
 // int g_CurveCurrentIndex = 0;    /* 折れ線の配列において、いま操作している折れ線のインデックス */
 
-extern bool keyup,
-     keyright,
-     keydown,
-     keyleft;
+bool keyup = false,
+     keyright = false,
+     keydown = false,
+     keyleft = false;
 
 Object heroin;
+
+ObjectList bullet;
 
 void init(void)
 {
     //白
     // glClearColor(1.0, 1.0, 1.0, 1.0);   /* ウィンドウを消去するときの色を設定 */
-    glClearColor(0, 0, 0, 0);
+    glClearColor(0, 0, 0, 1.0);
     // glLineWidth(3.f);                   /* 線の太さを指定 */
     // glEnable(GL_LINE_SMOOTH);           /* 線をなめらかに表示するための設定 */
     // glEnable(GL_BLEND);
@@ -47,12 +49,14 @@ void init(void)
 
     InitImageData(&heroin.img);    /* 画像データを初期化 */
 
-    if(LoadPPMImage("test.ppm" ,&heroin.img)){
+    if(LoadPPMImage_alpha("test.ppm" ,&heroin.img)){
         FlipImageData(&heroin.img);    /* 画像の上下を反転する */
         MakeTextureFromImage(&heroin.tex, &heroin.img);
     }
-    heroin.posx = 0;
-    heroin.posy = 0;
+    //初期位置
+    setPosObject(&heroin, 0, 0, true);
+
+
 
     StartTimer();
 }
@@ -82,11 +86,19 @@ void display(void)
     /* ウィンドウを消去 … glClearColor で指定した色で塗りつぶし */
     glClear(GL_COLOR_BUFFER_BIT);
 
+    //alpha値を有効に
+    glAlphaFunc(GL_GREATER,0.5);
+    glEnable(GL_ALPHA_TEST);
+
     if( IsImageDataAllocated(&heroin.img) && IsTextureAvailable(&heroin.tex)){
-        glColor3f(1,1,1);
+        // printf("4: %d\n", heroin.img.data[4 + 1000 * 4]);
+        // glColor3f(1,1,1);
         DrawTexturedQuad_d(&heroin.tex, heroin.posx, heroin.posy, heroin.img.width, heroin.img.height);
     }
-   
+    
+    //alphaを無効に
+    glDisable(GL_ALPHA_TEST);
+
     glutSwapBuffers();
     // glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
 }
@@ -97,8 +109,6 @@ void idle(void)
 	/* もし前回の更新から一定時間が過ぎていたら */
 	if ( GetRapTime(g_PrevTime) >= g_AnimationDulation )
 	{
-	  /* めりこみを許す */
-	  int offset = 0;
 	  
 		/* x, y 座標を更新 */
 		// g_ImagePosX += g_ImageVelocityX;
@@ -106,24 +116,7 @@ void idle(void)
 
         moveObject(&heroin, VELO_SPEED);
 		
-        /* 画面の外に出ないように座標を調整 */
-		if (heroin.posx < -offset)
-		{
-			heroin.posx = -offset;
-		}
-		else if (g_WindowWidth - heroin.img.width + offset <= heroin.posx)
-		{
-			heroin.posx = g_WindowWidth - heroin.img.width + offset;
-		}
-
-		if (heroin.posy < -offset)
-		{
-			heroin.posy = -offset;
-		}
-		else if (g_WindowHeight - heroin.img.height + offset <= heroin.posy)
-		{
-			heroin.posy = g_WindowHeight - heroin.img.height + offset;
-		}
+        limitPosObject(&heroin, 0);
 
 		/* 最終更新時刻を記録する */
 		g_PrevTime = GetTime();
@@ -208,7 +201,7 @@ void reshape(int w, int h)
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutInitWindowSize(g_WindowWidth, g_WindowHeight);
     glutCreateWindow("shooting_witch");
     glutDisplayFunc(display);

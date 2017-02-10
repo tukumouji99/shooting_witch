@@ -47,7 +47,8 @@ int MakeTextureFromImage(TextureImage *tex, ImageData *img)
     } 
 #endif
 
-  if ( img->channels != 1 && img->channels != 3 )
+  if ( img->channels != 1 && img->channels != 3 &&
+       img->channels != 2 && img->channels != 4)
     {
       fprintf(stderr, "MakeTextureFromImage: invalid channels: %d\n",
 	      img->channels);
@@ -68,12 +69,18 @@ int MakeTextureFromImage(TextureImage *tex, ImageData *img)
   
 
   glBindTexture(GL_TEXTURE_2D, tex->texID);
-  if (img->channels == 1)
+  if (img->channels == 1){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, img->width, img->height, 0,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE, img->data);
-  else if (img->channels == 3)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img->width, img->height, 0,
-		     GL_RGB, GL_UNSIGNED_BYTE, img->data);
+  }
+  else if (img->channels == 3){
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, img->width, img->height, 0, GL_RGB, GL_UNSIGNED_BYTE, img->data);
+          // gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA,img->width,img->height,GL_ALPHA,GL_UNSIGNED_BYTE,img->data);
+  }
+  else if (img->channels == 4){
+    printf("abe\n");
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA,img->width,img->height,GL_RGBA,GL_UNSIGNED_BYTE,img->data);
+  }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 

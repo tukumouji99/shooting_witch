@@ -5,6 +5,8 @@
 
 int LoadPPMImage(const char *filename, ImageData *img);
 
+int LoadPPMImage_alpha(const char *filename, ImageData *img);
+
 int SavePPMImage(const char *filename, ImageData *img);
 
 
