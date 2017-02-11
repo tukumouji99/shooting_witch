@@ -78,7 +78,7 @@ int MakeTextureFromImage(TextureImage *tex, ImageData *img)
           // gluBuild2DMipmaps(GL_TEXTURE_2D, GL_ALPHA,img->width,img->height,GL_ALPHA,GL_UNSIGNED_BYTE,img->data);
   }
   else if (img->channels == 4){
-    printf("abe\n");
+    // printf("abe\n");
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA,img->width,img->height,GL_RGBA,GL_UNSIGNED_BYTE,img->data);
   }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

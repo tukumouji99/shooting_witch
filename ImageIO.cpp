@@ -152,7 +152,7 @@ int LoadPPMImage_alpha(const char *filename, ImageData *img)
 			nRead++;
 			// printf("%7d: %d %d %d %d\n", i / 4, img->data[i], img->data[i+1], img->data[i+2], img->data[i+3]);
 		}
-		printf("nRead: %d size : %d\n", nRead, size);
+		// printf("nRead: %d size : %d\n", nRead, size);
 		if (nRead != size)
 		{
 			fprintf(stderr, "LoadPPMImage: fread cannot read full data: %d bytes read\n", nRead);

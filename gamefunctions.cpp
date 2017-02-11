@@ -1,8 +1,10 @@
+#include<cstdio>
+#include<cmath>
+#include<cstring>
+#include<GL/glut.h>
 #include"ImageIO.h"
 #include"ImageData.h"
 #include"gamefunctions.h"
-#include<cstdio>
-#include<cmath>
 
 extern bool 
     keyup,
@@ -14,6 +16,7 @@ extern bool
 extern int
     g_WindowHeight,
     g_WindowWidth;
+
 
 Node *createNode(const char *filename, double posx, double posy){
     Node *n = new Node[1];
@@ -43,7 +46,7 @@ void setTextureObject(Object *obj, const char *filename, double posx, double pos
         MakeTextureFromImage(&obj->tex, &obj->img);
     }
     //初期位置
-    setPosObject(obj, 0, 0, status);
+    setPosObject(obj, posx, posy, status);
 }
 
 void sameTextureMultiSet(Object object[],const char *filename, double posx, double posy, bool status, int num){
@@ -86,11 +89,9 @@ void setPosObject(Object *obj, double xi, double yi, bool status_){
 }
 
 void displayObject(Object *obj){
-    
     if( IsImageDataAllocated(&obj->img) && IsTextureAvailable(&obj->tex) && obj->status){
         DrawTexturedQuad_d(&obj->tex, obj->posx, obj->posy, obj->img.width, obj->img.height);
     }
-
 }
 
 void displayObject(Object obj[], int num){
@@ -161,7 +162,7 @@ void limitPosObject(Object *obj, int offset){
 
 bool judgeHit(Object *obj1, Object *obj2, int offset){
     
-    if(fabs((obj1->posx + obj1->img.width / 2.0) - (obj2->posx + obj2->img.width / 2.0)) < offset){
+    if(fabs((obj1->posx + obj1->img.width / 2.0) - (obj2->posx + obj2->img.width / 2.0)) < offset && fabs((obj1->posy + obj1->img.height / 2.0) - (obj2->posy + obj2->img.height / 2.0)) < offset){
         if(obj1->status && obj2->status){
             obj1->status = false;
             obj2->status = false;
@@ -171,6 +172,86 @@ bool judgeHit(Object *obj1, Object *obj2, int offset){
 
     return false;
 
+}
+
+Enemy::Enemy(){
+
+}
+
+Enemy::Enemy(const char *filename, double _posx, double _posy, bool _status, int _hp){
+    InitImageData(&img);
+
+    if(LoadPPMImage_alpha(filename, &img)){
+        FlipImageData(&img);
+        MakeTextureFromImage(&tex, &img);
+    }
+
+    posx    = _posx;
+    posy    = _posy;
+    status  = _status;
+    hp      = _hp;
+}
+
+void Enemy::display(){
+    if( IsImageDataAllocated(&img) && IsTextureAvailable(&tex) && status){
+        DrawTexturedQuad_d(&tex, posx, posy, img.width, img.height);
+    }
+}
+
+void Enemy::setpos(double _posx, double _posy, bool _status){
+    posx    = _posx;
+    posy    = _posy;
+    status  = _status;
+}
+
+void Enemy::move(int windowWidth, double velocity){
+    if(status){
+        posx -= velocity;
+    }
+    if(posx < -img.width){
+        status = false;
+    }
+}
+
+bool Enemy::judgeHit(Object *obj, int offset){
+        if(fabs((obj->posx + obj->img.width / 2.0) - (posx + img.width / 2.0)) < offset && fabs((obj->posy + obj->img.height / 2.0) - (posy + img.height / 2.0)) < offset){
+        if(obj->status && status){
+            obj->status = false;
+            status = false;
+            return true;
+        }
+    }
+}
+
+void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0){
+    glDisable(GL_LIGHTING);
+    // 平行投影にする
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, windowWidth, windowHeight, 0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // 画面上にテキスト描画
+    glRasterPos2f(x0, y0);
+    char pre[6];
+    strcpy(pre, "time:");
+    for(int i = 0; i < 5; i++){
+        char ic = pre[i];
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, ic);
+    }
+    int size = length;
+    for(int i = 0; i < size; ++i){
+        char ic = str[i];
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, ic);
+    }
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void initDoubleArray(double array[], int num){

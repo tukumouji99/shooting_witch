@@ -1,6 +1,8 @@
 #include<cstdio>
 #include<cstdlib>
 #include<cmath>
+#include<string>
+#include<new>
 #include<GL/glut.h>
 
 #include"ImageData.h"
@@ -11,9 +13,6 @@
 #include"gamefunctions.h"
 
 #define VELO_SPEED 2
-#define PLAYER_SHOT_MAX 20
-#define ENEMY_IMAGE "mon_272_reversed.ppm"
-#define ENEMY_NUM 1
 
 ImageData g_Image;
 TextureImage g_Tex;
@@ -36,12 +35,20 @@ bool keyup      = false,
      keyleft    = false,
      keyz       = false;
 
+#define TIMER_DIGIT 10
+// std::string timer(TIMER_DIGIT, '\0');
+char timer[TIMER_DIGIT];
+
 Object heroin;
 
+#define PLAYER_SHOT_MAX 20
 Object bullet[PLAYER_SHOT_MAX];
 double bullet_Prevtime = 0.0;
 
-Object enemy[ENEMY_NUM];
+#define ENEMY_IMAGE "mon_272_reversed.ppm"
+#define ENEMY_NUM 1
+// Object enemy[ENEMY_NUM];
+Enemy enemy[ENEMY_NUM];
 double enemy_Prevtime[ENEMY_NUM];
 
 void init(void)
@@ -56,9 +63,14 @@ void init(void)
 
     sameTextureMultiSet(bullet, "buy_bullet.ppm", 0, 0, false, PLAYER_SHOT_MAX);
 
-    sameTextureMultiSet(enemy, ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_NUM);
+    // sameTextureMultiSet(enemy, ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_NUM);
+    
+    for(int i = 0; i < ENEMY_NUM; i++){
+        new( &enemy[i] ) Enemy( ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, 5);
+    }
 
     StartTimer();
+    // printf("width: %d\n", heroin.img.width);
 }
 
 void DrawCircle(int xi, int yi, int radius)
@@ -81,22 +93,32 @@ void DrawCircle(int xi, int yi, int radius)
 /* 表示処理のためのコールバック関数 */
 void display(void)
 {
+
     int i;
 
+    // printf("display: width: %d\n", heroin.img.width);
+    sprintf(timer, "%10.2lf", GetTime()/100.0);
+    
     /* ウィンドウを消去 … glClearColor で指定した色で塗りつぶし */
     glClear(GL_COLOR_BUFFER_BIT);
+ 
+    glColor3d(1.0, 1.0, 1.0);
+    DrawString(timer, TIMER_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4, 18);
 
     //alpha値を有効に
     glAlphaFunc(GL_GREATER,0.5);
     glEnable(GL_ALPHA_TEST);
 
     displayObject(&heroin);
+
     displayObject(bullet, PLAYER_SHOT_MAX);
-    displayObject(enemy, ENEMY_NUM);
+    for(int i = 0; i < ENEMY_NUM; i++){
+        enemy[i].display();
+    }
     
     for(int i = 0; i < ENEMY_NUM; i++){
         for(int j = 0; j < PLAYER_SHOT_MAX; j++){
-            if(judgeHit(&enemy[i], &bullet[j], 20)){
+            if(enemy[i].judgeHit(&bullet[j], 20)){
                 enemy_Prevtime[i] = GetTime();
             }
         }
@@ -124,12 +146,7 @@ void idle(void)
         limitPosObject(&heroin, 200);
 
         for(int i = 0; i < ENEMY_NUM; i++){
-            if(enemy[i].status){
-                enemy[i].posx -= 2;
-            }
-            if(enemy[i].posx < -enemy[i].img.width){
-                enemy[i].status = false;
-            }
+            enemy[i].move(g_WindowWidth, 2);
         }
 
 		/* 最終更新時刻を記録する */
@@ -150,8 +167,10 @@ void idle(void)
             bullet[i].posx += 50;
             
             for(int j = 0; j < ENEMY_NUM; j++){
-                if(GetRapTime(enemy_Prevtime[j]) > 20 && !enemy[j].status){
-                    setPosObject(&enemy[j], g_WindowWidth, g_WindowHeight / 4 * 3, true);
+                // if(GetRapTime(enemy_Prevtime[j]) > 20 && !enemy[j].status){
+                if(!enemy[j].status){
+                    // setPosObject(&enemy[j], g_WindowWidth, g_WindowHeight / 4 * 3, true);
+                    enemy[j].setpos(g_WindowWidth, g_WindowHeight / 4 * 3, true);
                 }
             }
             

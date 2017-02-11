@@ -11,6 +11,30 @@ typedef struct{
     bool status;
 } Object;
 
+class Enemy{
+    private:
+        ImageData img;
+    public:
+        TextureImage tex;
+        double posx, posy;
+        int hp;
+        bool status;
+
+        Enemy();
+
+        Enemy(const char *filename, double _posx, double _posy, bool _status,int _hp);
+
+        Enemy(double _posx, double _posy, bool _status,int _hp);
+
+        void display();
+
+        void setpos(double _posx, double _posy, bool _status);
+
+        void move(int windowWidth, double velocity);
+
+        bool judgeHit(Object *obj, int offset);
+};
+
 typedef struct _node{
     Object object;
     struct _node *next;
@@ -43,6 +67,8 @@ void moveObject(Object *obj, double velocity);
 void limitPosObject(Object *obj, int offset);
 
 bool judgeHit(Object *obj1, Object *obj2, int offset);
+
+void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0);
 
 void initDoubleArray(double array[], int num);
 
