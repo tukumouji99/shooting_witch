@@ -1,6 +1,7 @@
 #include<cstdio>
 #include<cmath>
 #include<cstring>
+#include<string>
 #include<GL/glut.h>
 #include"ImageIO.h"
 #include"ImageData.h"
@@ -198,9 +199,10 @@ void Enemy::display(){
     }
 }
 
-void Enemy::setpos(double _posx, double _posy, bool _status){
+void Enemy::setpos(double _posx, double _posy, int _hp, bool _status){
     posx    = _posx;
     posy    = _posy;
+    hp      = _hp;
     status  = _status;
 }
 
@@ -214,16 +216,25 @@ void Enemy::move(int windowWidth, double velocity){
 }
 
 bool Enemy::judgeHit(Object *obj, int offset){
-        if(fabs((obj->posx + obj->img.width / 2.0) - (posx + img.width / 2.0)) < offset && fabs((obj->posy + obj->img.height / 2.0) - (posy + img.height / 2.0)) < offset){
+    if(fabs((obj->posx + obj->img.width / 2.0) - (posx + img.width / 2.0)) < img.width && fabs((obj->posy + obj->img.height / 2.0) - (posy + img.height / 2.0)) < offset){
         if(obj->status && status){
             obj->status = false;
-            status = false;
+            hp -= 1;
             return true;
         }
     }
 }
 
-void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0){
+bool Enemy::judgeAlive(){
+    if(hp <= 0){
+        status = false;
+        return true;
+    }
+
+    return false;
+}
+
+void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0, const char *prestring){
     glDisable(GL_LIGHTING);
     // 平行投影にする
     glMatrixMode(GL_PROJECTION);
@@ -236,9 +247,9 @@ void DrawString(char *str, int length, void *font, int windowWidth, int windowHe
 
     // 画面上にテキスト描画
     glRasterPos2f(x0, y0);
-    char pre[6];
-    strcpy(pre, "time:");
-    for(int i = 0; i < 5; i++){
+    char pre[256];
+    strcpy(pre, prestring);
+    for(int i = 0; pre[i] != '\0'; i++){
         char ic = pre[i];
         glutBitmapCharacter(GLUT_BITMAP_9_BY_15, ic);
     }

@@ -28,11 +28,13 @@ class Enemy{
 
         void display();
 
-        void setpos(double _posx, double _posy, bool _status);
+        void setpos(double _posx, double _posy, int _hp, bool _status);
 
         void move(int windowWidth, double velocity);
 
         bool judgeHit(Object *obj, int offset);
+
+        bool judgeAlive();
 };
 
 typedef struct _node{
@@ -68,7 +70,7 @@ void limitPosObject(Object *obj, int offset);
 
 bool judgeHit(Object *obj1, Object *obj2, int offset);
 
-void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0);
+void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0, const char *prestring);
 
 void initDoubleArray(double array[], int num);
 

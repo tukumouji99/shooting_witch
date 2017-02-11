@@ -47,9 +47,16 @@ double bullet_Prevtime = 0.0;
 
 #define ENEMY_IMAGE "mon_272_reversed.ppm"
 #define ENEMY_NUM 1
+#define ENEMY_HP 20
 // Object enemy[ENEMY_NUM];
 Enemy enemy[ENEMY_NUM];
 double enemy_Prevtime[ENEMY_NUM];
+
+#define DEFEAT_SCORE 500
+#define SCORE_DIGIT 10
+double score = 0,
+       displayscore = 0;
+char scorec[10];
 
 void init(void)
 {
@@ -66,7 +73,7 @@ void init(void)
     // sameTextureMultiSet(enemy, ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_NUM);
     
     for(int i = 0; i < ENEMY_NUM; i++){
-        new( &enemy[i] ) Enemy( ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, 5);
+        new( &enemy[i] ) Enemy( ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_HP);
     }
 
     StartTimer();
@@ -93,17 +100,12 @@ void DrawCircle(int xi, int yi, int radius)
 /* 表示処理のためのコールバック関数 */
 void display(void)
 {
-
     int i;
 
     // printf("display: width: %d\n", heroin.img.width);
-    sprintf(timer, "%10.2lf", GetTime()/100.0);
     
     /* ウィンドウを消去 … glClearColor で指定した色で塗りつぶし */
     glClear(GL_COLOR_BUFFER_BIT);
- 
-    glColor3d(1.0, 1.0, 1.0);
-    DrawString(timer, TIMER_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4, 18);
 
     //alpha値を有効に
     glAlphaFunc(GL_GREATER,0.5);
@@ -126,6 +128,17 @@ void display(void)
     
     //alphaを無効に
     glDisable(GL_ALPHA_TEST);
+
+    sprintf(timer, "%10.2lf", GetTime()/100.0);
+    glColor3d(1.0, 1.0, 1.0);
+    DrawString(timer, TIMER_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4, 18, "timer:");
+
+    if(displayscore < score){
+        displayscore+=2;
+    }
+    sprintf(scorec, "%10.0lf", displayscore);
+    glColor3d(1.0, 1.0, 1.0);
+    DrawString(scorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, 0, 18, "score:");
 
     glutSwapBuffers();
     // glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
@@ -168,9 +181,13 @@ void idle(void)
             
             for(int j = 0; j < ENEMY_NUM; j++){
                 // if(GetRapTime(enemy_Prevtime[j]) > 20 && !enemy[j].status){
+                if(enemy[j].judgeAlive()){
+                    score += DEFEAT_SCORE;
+                }
                 if(!enemy[j].status){
                     // setPosObject(&enemy[j], g_WindowWidth, g_WindowHeight / 4 * 3, true);
-                    enemy[j].setpos(g_WindowWidth, g_WindowHeight / 4 * 3, true);
+                    enemy[j].setpos(g_WindowWidth, g_WindowHeight / 4 * 3, ENEMY_HP, true);
+                    break;
                 }
             }
             
