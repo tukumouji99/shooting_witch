@@ -1,6 +1,8 @@
 #ifndef __GAMEFUNCTIONS_H__
 #define __GAMEFUNCTIONS_H__
 
+#define E_BULLET_NUM 100
+
 #include"TextureImage.h"
 
 typedef struct{
@@ -11,6 +13,10 @@ typedef struct{
     bool status;
 } Object;
 
+typedef struct{
+    double dirx, diry;
+} Vector;
+
 class Enemy{
     private:
         ImageData img;
@@ -19,6 +25,8 @@ class Enemy{
         double posx, posy;
         int hp;
         bool status;
+        Object E_bullet[ E_BULLET_NUM ];
+        Vector bulletVector[ E_BULLET_NUM ];
 
         Enemy();
 
@@ -35,6 +43,18 @@ class Enemy{
         bool judgeHit(Object *obj, int offset);
 
         bool judgeAlive();
+
+        void presetbullet(const char *filename);
+
+        void setbullet();
+
+        void shootbullet(int num, int velocity);
+
+        void movebullet(int num);
+
+        void displaybullet();
+
+        void judgebullet(int windowWidth, int windowHeight);
 };
 
 typedef struct _node{

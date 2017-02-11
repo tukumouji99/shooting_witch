@@ -234,6 +234,48 @@ bool Enemy::judgeAlive(){
     return false;
 }
 
+void Enemy::presetbullet(const char *filename){
+    sameTextureMultiSet(E_bullet, filename, posx, posy, false, E_BULLET_NUM);
+}
+
+void Enemy::setbullet(){
+    for(int i = 0; i < E_BULLET_NUM; i++){
+        setPosObject(&E_bullet[i], posx, posy, false);
+    }
+}
+
+void Enemy::shootbullet(int num, int velocity){
+    for(int i = 0; i < num; i++){
+        bulletVector[i].dirx    = velocity * cos(2 * M_PI / num * i);
+        bulletVector[i].diry    = velocity * sin(2 * M_PI / num * i);
+        E_bullet[i].status        = true;
+    }
+}
+
+void Enemy::movebullet(int num){
+    for(int i = 0; i < num; i++){
+        E_bullet[i].posx += bulletVector[i].dirx;
+        E_bullet[i].posy += bulletVector[i].diry;
+    }
+}
+
+void Enemy::displaybullet(){
+    displayObject(E_bullet, E_BULLET_NUM);
+}
+
+void Enemy::judgebullet(int windowWidth, int windowHeight){
+    for(int i = 0; i < E_BULLET_NUM; i++){
+        if( E_bullet[i].posx + E_bullet[i].img.width < 0 ||
+            E_bullet[i].posx > windowWidth ||
+            E_bullet[i].posy < 0 ||
+            E_bullet[i].posy > windowHeight){
+            if(E_bullet[i].status){
+                E_bullet[i].status = false;
+            }
+        }
+    }
+}
+
 void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0, const char *prestring){
     glDisable(GL_LIGHTING);
     // 平行投影にする

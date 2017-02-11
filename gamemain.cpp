@@ -48,9 +48,12 @@ double bullet_Prevtime = 0.0;
 #define ENEMY_IMAGE "mon_272_reversed.ppm"
 #define ENEMY_NUM 1
 #define ENEMY_HP 20
+#define ENEMY_BULLET_IMAGE "nc120941_fixed.ppm"
+// #define ENEMY_BULLET_NUM 100
 // Object enemy[ENEMY_NUM];
 Enemy enemy[ENEMY_NUM];
 double enemy_Prevtime[ENEMY_NUM];
+bool ebulleton = true;
 
 #define DEFEAT_SCORE 500
 #define SCORE_DIGIT 10
@@ -74,6 +77,7 @@ void init(void)
     
     for(int i = 0; i < ENEMY_NUM; i++){
         new( &enemy[i] ) Enemy( ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_HP);
+        enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
     }
 
     StartTimer();
@@ -116,6 +120,7 @@ void display(void)
     displayObject(bullet, PLAYER_SHOT_MAX);
     for(int i = 0; i < ENEMY_NUM; i++){
         enemy[i].display();
+        enemy[i].displaybullet();
     }
     
     for(int i = 0; i < ENEMY_NUM; i++){
@@ -125,7 +130,7 @@ void display(void)
             }
         }
     }
-    
+
     //alphaを無効に
     glDisable(GL_ALPHA_TEST);
 
@@ -149,19 +154,36 @@ void idle(void)
 {
 	/* もし前回の更新から一定時間が過ぎていたら */
 	if ( GetRapTime(g_PrevTime) >= g_AnimationDulation )
-	{
-	  
-		/* x, y 座標を更新 */
-		// g_ImagePosX += g_ImageVelocityX;
-		// g_ImagePosY += g_ImageVelocityY;
-
+    {
+		
         moveObject(&heroin, VELO_SPEED);
         limitPosObject(&heroin, 200);
 
         for(int i = 0; i < ENEMY_NUM; i++){
             enemy[i].move(g_WindowWidth, 2);
+            bool doit = true;
+                for(int j = 0; j < 10; j++){
+                    if(enemy[i].E_bullet[j].status){
+                        doit = false;
+                    }
+                }
+                if(doit || ebulleton){
+                    enemy[i].setbullet();
+                    enemy[i].shootbullet(10, 5);
+                    ebulleton = false;
+                }
+            if(!doit){
+                enemy[i].movebullet(10);
+                enemy[i].judgebullet(g_WindowWidth, g_WindowHeight);
+            }
         }
 
+        // if((int)GetTime()%10==0){
+        //     for(int i = 0; i < ENEMY_NUM; i++){
+                
+                
+        //     }
+        // }
 		/* 最終更新時刻を記録する */
 		g_PrevTime = GetTime();
 	}
