@@ -164,4 +164,3 @@ void DrawTexturedQuad_d(TextureImage *tex, double xi, double yi, double w, doubl
 
   glError();
 }
-

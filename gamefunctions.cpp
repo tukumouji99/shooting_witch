@@ -1,4 +1,5 @@
 #include<cstdio>
+#include<cstdlib>
 #include<cmath>
 #include<cstring>
 #include<string>
@@ -20,7 +21,7 @@ extern int
     g_WindowWidth;
 
 Enemy::Enemy(){
-
+    shown = false;
 }
 
 Enemy::Enemy(const char *filename, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _velocity, double _interval, double _appeartime, bool _status){
@@ -43,8 +44,10 @@ Enemy::Enemy(const char *filename, double _posx, double _posy, int _hp, int _sho
 }
 
 void Enemy::display(){
+    shown = false;
     if( IsImageDataAllocated(&img) && IsTextureAvailable(&tex) && status && GetSecond() > appearTime){
         DrawTexturedQuad_d(&tex, posx, posy, img.width, img.height);
+        shown = true;
     }
 }
 
@@ -68,7 +71,7 @@ void Enemy::move(int windowWidth, double velocity){
 
 bool Enemy::judgeHit(Object *obj, int offset){
     if(fabs((obj->posx + obj->img.width / 2.0) - (posx + img.width / 2.0)) < img.width && fabs((obj->posy + obj->img.height / 2.0) - (posy + img.height / 2.0)) < offset){
-        if(obj->status && status){
+        if(obj->status && status && shown){
             obj->status = false;
             hp -= 1;
             if(this->judgeAlive()){
@@ -100,6 +103,7 @@ void Enemy::setbullet(){
 
 void Enemy::shootbullet(Object *obj){
     int shooted = 0;
+    double angle = atan2((obj->posy + obj->img.height / 2) - (posy), (obj->posx + obj->img.width / 2) - posx);
     if(GetSecond() > appearTime){
         if(GetRapTime(shootedtime) >= bulletInterval && status){
             for(int i = 0; i < E_BULLET_NUM; i++){
@@ -109,11 +113,15 @@ void Enemy::shootbullet(Object *obj){
                         bulletVector[i].diry    = bulletVelocity * sin(2 * M_PI / bulletnum * shooted + 50.0 / 360.0 * 2 * M_PI);
                     }
                     else if(shootmode == 1){
-                        double angle = atan2((obj->posy + obj->img.height / 2) - (posy), (obj->posx + obj->img.width / 2) - posx);
                         bulletVector[i].dirx    = bulletVelocity * cos(angle);
                         bulletVector[i].diry    = bulletVelocity * sin(angle);
                     }
-                    setPosObject(&E_bullet[i], posx, posy, true);
+                    else if(shootmode == 2){
+                        srand(shooted);
+                        bulletVector[i].dirx    = bulletVelocity * cos(angle + rand()%45 / 360.0 * 2 * M_PI);
+                        bulletVector[i].diry    = bulletVelocity * sin(angle + rand()%45 / 360.0 * 2 * M_PI);
+                    }
+                    setPosObject(&E_bullet[i], posx,posy, true);
                     shooted++;
                 }
                 if(shooted >= bulletnum){

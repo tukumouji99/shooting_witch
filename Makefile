@@ -4,7 +4,7 @@ shooting.exe: gamemain.o ImageData.o ImageIO.o TextureImage.o GenericTimer.o gam
 .c.o:
 	g++ -c $< -I. -Wall 
 
-gamemain.o: ImageData.h ImageIO.h TextureImage.h GenericTimer.h gamefunctions.h
+# gamemain.o: ImageData.h ImageIO.h TextureImage.h GenericTimer.h gamefunctions.h
 
 run:
 	./shooting.exe

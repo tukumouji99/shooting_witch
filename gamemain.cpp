@@ -12,7 +12,7 @@
 
 #include"gamefunctions.h"
 
-#define VELO_SPEED 2
+#define VELO_SPEED 5
 
 ImageData g_Image;
 TextureImage g_Tex;
@@ -41,12 +41,12 @@ char timer[TIMER_DIGIT];
 
 Object heroin;
 
-#define PLAYER_SHOT_MAX 20
+#define PLAYER_SHOT_MAX 24
 Object bullet[PLAYER_SHOT_MAX];
 double bullet_Prevtime = 0.0;
 
 #define ENEMY_IMAGE "mon_272_reversed.ppm"
-#define ENEMY_NUM 4
+#define ENEMY_NUM 6
 #define ENEMY_HP 20
 #define ENEMY_BULLET_IMAGE "nc120941_fixed.ppm"
 #define ENEMY_BULLET_IMAGE2 "daen_gray_fixed.ppm"
@@ -54,8 +54,10 @@ double bullet_Prevtime = 0.0;
 // Object enemy[ENEMY_NUM];
 Enemy enemy[ENEMY_NUM];
 double enemy_Prevtime[ENEMY_NUM];
+// Enemy *enemy;
+// double *enemy_Prevtime;
 bool ebulleton = true;
-Vector enemypos[ENEMY_NUM] = {{g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}, {g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}};
+Vector enemypos[ENEMY_NUM] = {{g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}, {g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}, {g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}};
 
 #define DEFEAT_SCORE 500
 #define SCORE_DIGIT 10
@@ -69,30 +71,36 @@ void init(void)
 {
     //白
     // glClearColor(1.0, 1.0, 1.0, 1.0);   /* ウィンドウを消去するときの色を設定 */
-    glClearColor(0, 0, 0, 1.0);
+    glClearColor(0.005, 0, 0.15, 1.0);
 
     initDoubleArray(enemy_Prevtime, ENEMY_NUM);
 
-    setTextureObject(&heroin, "test.ppm", 0, 0, true, 3);
+    setTextureObject(&heroin, "hero2.ppm", 0, 0, true, 3);
+    heroin.img.width     /= 1.5;
+    heroin.img.height    /= 1.5;
 
-    sameTextureMultiSet(bullet, "buy_bullet.ppm", 0, 0, false, PLAYER_SHOT_MAX);
-
+    sameTextureMultiSet(bullet, "hero_bullet.ppm", 0, 0, false, PLAYER_SHOT_MAX);
     // sameTextureMultiSet(enemy, ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_NUM);
-    
+
+    FILE *fin;
+    // enemy = new Enemy[ENEMY_NUM];
+    // enemy_Prevtime = new double[ENEMY_NUM];
     for(int i = 0; i < ENEMY_NUM; i++){
         if(i < 2){
-            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 0, 10, 3, 1000, 10,true);
+            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 0, 10, 3, 1000, 2, true);
+            enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+        }
+        else if(i < 4){
+            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 2, 4, 10, 500, 5, true);
             enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
         }
         else{
-            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 1, 1, 10, 100, 2, true);
+            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 1, 1, 10, 500, 10, true);
             enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
-            // enemyAppearTime[i] = 10;
         }
     }
 
     StartTimer();
-    // printf("width: %d\n", heroin.img.width);
 }
 
 void DrawCircle(int xi, int yi, int radius)
@@ -127,10 +135,10 @@ void display(void)
         strcpy(start, "push any key to start");
         glColor3d(1.0, 1.0, 1.0);
         DrawString(start, 21, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2);
-
     }
+
     else if(displaymode == 1){
-        //alpha値を有効に
+        //alpha値を有効に;
         glAlphaFunc(GL_GREATER,0.5);
         glEnable(GL_ALPHA_TEST);
 
@@ -138,10 +146,8 @@ void display(void)
 
         displayObject(bullet, PLAYER_SHOT_MAX);
         for(int i = 0; i < ENEMY_NUM; i++){
-            // if(enemyAppearTime[i] < GetTime()/1000.0){
-                enemy[i].display();
-                enemy[i].displaybullet();
-            // }
+            enemy[i].display();
+            enemy[i].displaybullet();
         }
         
         for(int i = 0; i < ENEMY_NUM; i++){
@@ -152,7 +158,7 @@ void display(void)
                 }
             }
             for(int j = 0; j < enemy[i].bulletnum; j++){
-                judgeHit_mainchara(&heroin, &enemy[i].E_bullet[j],20);
+                judgeHit_mainchara(&heroin, &enemy[i].E_bullet[j], 20);
             }
         }
 
@@ -166,6 +172,7 @@ void display(void)
         if(displayscore < score){
             displayscore+=2;
         }
+
         sprintf(scorec, "%10.0lf", displayscore);
         DrawString(scorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4 - 200, 18, "score:");
 
@@ -226,7 +233,6 @@ void idle(void)
 /* キーボード入力のためのコールバック関数 */
 void keyboard(unsigned char key, int x, int y)
 {
-    displaymode = 1;
     switch (key)
     {
         case 'z':
@@ -235,9 +241,15 @@ void keyboard(unsigned char key, int x, int y)
         case 'q':   /* キーボードの 'q' 'Q' 'ESC' を押すとプログラム終了 */
         case 'Q':
         case '\033':
+            // delete[] enemy;
             exit(-1);
             break;
     }
+    if(displaymode == 0){
+        StartTimer();
+    }
+
+    displaymode = 1;
 
     glutPostRedisplay();    /* ウィンドウ描画関数を呼ぶ */
 }

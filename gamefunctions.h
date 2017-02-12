@@ -31,6 +31,7 @@ class Enemy{
         double shootedtime ,bulletInterval, bulletVelocity;
         int bulletnum, shootmode;
         double appearTime;
+        bool shown;
 
         Enemy();
 
