@@ -48,6 +48,10 @@ double GetTime(void)
 #endif
 }
 
+double GetSecond(void){
+	return GetTime() / 1000.0;
+}
+
 double GetRapTime(double prevTime)
 {
 	return GetTime() - prevTime;

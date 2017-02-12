@@ -46,20 +46,24 @@ Object bullet[PLAYER_SHOT_MAX];
 double bullet_Prevtime = 0.0;
 
 #define ENEMY_IMAGE "mon_272_reversed.ppm"
-#define ENEMY_NUM 1
+#define ENEMY_NUM 4
 #define ENEMY_HP 20
 #define ENEMY_BULLET_IMAGE "nc120941_fixed.ppm"
+#define ENEMY_BULLET_IMAGE2 "daen_gray_fixed.ppm"
 // #define ENEMY_BULLET_NUM 100
 // Object enemy[ENEMY_NUM];
 Enemy enemy[ENEMY_NUM];
 double enemy_Prevtime[ENEMY_NUM];
 bool ebulleton = true;
+Vector enemypos[ENEMY_NUM] = {{g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}, {g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}};
 
 #define DEFEAT_SCORE 500
 #define SCORE_DIGIT 10
 double score = 0,
        displayscore = 0;
 char scorec[10];
+
+int displaymode = 0;
 
 void init(void)
 {
@@ -69,15 +73,22 @@ void init(void)
 
     initDoubleArray(enemy_Prevtime, ENEMY_NUM);
 
-    setTextureObject(&heroin, "test.ppm", 0, 0, true);
+    setTextureObject(&heroin, "test.ppm", 0, 0, true, 3);
 
     sameTextureMultiSet(bullet, "buy_bullet.ppm", 0, 0, false, PLAYER_SHOT_MAX);
 
     // sameTextureMultiSet(enemy, ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_NUM);
     
     for(int i = 0; i < ENEMY_NUM; i++){
-        new( &enemy[i] ) Enemy( ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_HP);
-        enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+        if(i < 2){
+            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 0, 10, 3, 1000, 10,true);
+            enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+        }
+        else{
+            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 1, 1, 10, 100, 2, true);
+            enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+            // enemyAppearTime[i] = 10;
+        }
     }
 
     StartTimer();
@@ -104,46 +115,64 @@ void DrawCircle(int xi, int yi, int radius)
 /* 表示処理のためのコールバック関数 */
 void display(void)
 {
-    int i;
+    // int i;
 
     // printf("display: width: %d\n", heroin.img.width);
     
     /* ウィンドウを消去 … glClearColor で指定した色で塗りつぶし */
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //alpha値を有効に
-    glAlphaFunc(GL_GREATER,0.5);
-    glEnable(GL_ALPHA_TEST);
+    if(displaymode == 0){
+        char start[256];
+        strcpy(start, "push any key to start");
+        glColor3d(1.0, 1.0, 1.0);
+        DrawString(start, 21, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2);
 
-    displayObject(&heroin);
-
-    displayObject(bullet, PLAYER_SHOT_MAX);
-    for(int i = 0; i < ENEMY_NUM; i++){
-        enemy[i].display();
-        enemy[i].displaybullet();
     }
-    
-    for(int i = 0; i < ENEMY_NUM; i++){
-        for(int j = 0; j < PLAYER_SHOT_MAX; j++){
-            if(enemy[i].judgeHit(&bullet[j], 20)){
-                enemy_Prevtime[i] = GetTime();
+    else if(displaymode == 1){
+        //alpha値を有効に
+        glAlphaFunc(GL_GREATER,0.5);
+        glEnable(GL_ALPHA_TEST);
+
+        displayObject(&heroin);
+
+        displayObject(bullet, PLAYER_SHOT_MAX);
+        for(int i = 0; i < ENEMY_NUM; i++){
+            // if(enemyAppearTime[i] < GetTime()/1000.0){
+                enemy[i].display();
+                enemy[i].displaybullet();
+            // }
+        }
+        
+        for(int i = 0; i < ENEMY_NUM; i++){
+            for(int j = 0; j < PLAYER_SHOT_MAX; j++){
+                if(enemy[i].judgeHit(&bullet[j], 20)){
+                    enemy_Prevtime[i] = GetTime();
+                    score += DEFEAT_SCORE;
+                }
+            }
+            for(int j = 0; j < enemy[i].bulletnum; j++){
+                judgeHit_mainchara(&heroin, &enemy[i].E_bullet[j],20);
             }
         }
+
+        //alphaを無効に
+        glDisable(GL_ALPHA_TEST);
+
+        sprintf(timer, "%10.2lf", GetTime()/1000.0);
+        glColor3d(1.0, 1.0, 1.0);
+        DrawString(timer, TIMER_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4, 18, "timer:");
+
+        if(displayscore < score){
+            displayscore+=2;
+        }
+        sprintf(scorec, "%10.0lf", displayscore);
+        DrawString(scorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4 - 200, 18, "score:");
+
+        char remain[3] = {'\0','\0','\0'};
+        sprintf(remain, "%3d", heroin.remain);
+        DrawString(remain, 3, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, 0, 18, "player:");
     }
-
-    //alphaを無効に
-    glDisable(GL_ALPHA_TEST);
-
-    sprintf(timer, "%10.2lf", GetTime()/100.0);
-    glColor3d(1.0, 1.0, 1.0);
-    DrawString(timer, TIMER_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 5 * 4, 18, "timer:");
-
-    if(displayscore < score){
-        displayscore+=2;
-    }
-    sprintf(scorec, "%10.0lf", displayscore);
-    glColor3d(1.0, 1.0, 1.0);
-    DrawString(scorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, 0, 18, "score:");
 
     glutSwapBuffers();
     // glFlush();  /* ここまで指定した描画命令をウィンドウに反映 */
@@ -153,80 +182,51 @@ void display(void)
 void idle(void)
 {
 	/* もし前回の更新から一定時間が過ぎていたら */
-	if ( GetRapTime(g_PrevTime) >= g_AnimationDulation )
-    {
-		
-        moveObject(&heroin, VELO_SPEED);
-        limitPosObject(&heroin, 200);
+    if(displaymode == 1){
+        if ( GetRapTime(g_PrevTime) >= g_AnimationDulation )
+        {
+            
+            moveObject(&heroin, VELO_SPEED);
+            limitPosObject(&heroin, 200);
 
-        for(int i = 0; i < ENEMY_NUM; i++){
-            enemy[i].move(g_WindowWidth, 2);
-            bool doit = true;
-                for(int j = 0; j < 10; j++){
-                    if(enemy[i].E_bullet[j].status){
-                        doit = false;
-                    }
-                }
-                if(doit || ebulleton){
-                    enemy[i].setbullet();
-                    enemy[i].shootbullet(10, 5);
-                    ebulleton = false;
-                }
-            if(!doit){
-                enemy[i].movebullet(10);
+            for(int i = 0; i < ENEMY_NUM; i++){
+                enemy[i].move(g_WindowWidth, 2);
+                enemy[i].shootbullet(&heroin);
+                enemy[i].movebullet();
                 enemy[i].judgebullet(g_WindowWidth, g_WindowHeight);
             }
+
+            /* 最終更新時刻を記録する */
+            g_PrevTime = GetTime();
         }
 
-        // if((int)GetTime()%10==0){
-        //     for(int i = 0; i < ENEMY_NUM; i++){
-                
-                
-        //     }
-        // }
-		/* 最終更新時刻を記録する */
-		g_PrevTime = GetTime();
-	}
+        if( GetRapTime(bullet_Prevtime) >= 20){
+            if(keyz){
+                for(int i = 0; i < PLAYER_SHOT_MAX; i++){
+                    if(!bullet[i].status){
+                        setPosObject(&bullet[i], heroin.posx + heroin.img.width / 2.0, heroin.posy + heroin.img.height/ 2.0 , true);
+                        break;
+                    }
+                }
+            }
 
-    if( GetRapTime(bullet_Prevtime) >= 20){
-        if(keyz){
             for(int i = 0; i < PLAYER_SHOT_MAX; i++){
-                if(!bullet[i].status){
-                    setPosObject(&bullet[i], heroin.posx + heroin.img.width / 2.0, heroin.posy + heroin.img.height/ 2.0 , true);
-                    break;
+                bullet[i].posx += 50;
+                if(bullet[i].posx >= g_WindowWidth){
+                    bullet[i].status = false;
                 }
             }
-        }
 
-        for(int i = 0; i < PLAYER_SHOT_MAX; i++){
-            bullet[i].posx += 50;
-            
-            for(int j = 0; j < ENEMY_NUM; j++){
-                // if(GetRapTime(enemy_Prevtime[j]) > 20 && !enemy[j].status){
-                if(enemy[j].judgeAlive()){
-                    score += DEFEAT_SCORE;
-                }
-                if(!enemy[j].status){
-                    // setPosObject(&enemy[j], g_WindowWidth, g_WindowHeight / 4 * 3, true);
-                    enemy[j].setpos(g_WindowWidth, g_WindowHeight / 4 * 3, ENEMY_HP, true);
-                    break;
-                }
-            }
-            
-            if(bullet[i].posx >= g_WindowWidth){
-                bullet[i].status = false;
-            }
+            bullet_Prevtime = GetTime();
         }
-
-        bullet_Prevtime = GetTime();
     }
-
 	display();
 }
 
 /* キーボード入力のためのコールバック関数 */
 void keyboard(unsigned char key, int x, int y)
 {
+    displaymode = 1;
     switch (key)
     {
         case 'z':

@@ -5,6 +5,8 @@ void StartTimer(void);
 
 double GetTime(void);
 
+double GetSecond(void);
+
 double GetRapTime(double prevTime);
 
 #endif

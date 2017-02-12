@@ -1,7 +1,7 @@
 #ifndef __GAMEFUNCTIONS_H__
 #define __GAMEFUNCTIONS_H__
 
-#define E_BULLET_NUM 100
+#define E_BULLET_NUM 500
 
 #include"TextureImage.h"
 
@@ -11,6 +11,7 @@ typedef struct{
     double posx;
     double posy;
     bool status;
+    int remain;
 } Object;
 
 typedef struct{
@@ -27,10 +28,13 @@ class Enemy{
         bool status;
         Object E_bullet[ E_BULLET_NUM ];
         Vector bulletVector[ E_BULLET_NUM ];
+        double shootedtime ,bulletInterval, bulletVelocity;
+        int bulletnum, shootmode;
+        double appearTime;
 
         Enemy();
 
-        Enemy(const char *filename, double _posx, double _posy, bool _status,int _hp);
+        Enemy(const char *filename, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _velocity, double _interval, double _appeartime, bool _status);
 
         Enemy(double _posx, double _posy, bool _status,int _hp);
 
@@ -48,9 +52,9 @@ class Enemy{
 
         void setbullet();
 
-        void shootbullet(int num, int velocity);
+        void shootbullet(Object *obj);
 
-        void movebullet(int num);
+        void movebullet();
 
         void displaybullet();
 
@@ -71,6 +75,8 @@ Node *createNode(const char *filename, double posx, double posy);
 
 void setTextureObject(Object *obj, const char *filename, double posx, double posy, bool status);
 
+void setTextureObject(Object *obj, const char *filename, double posx, double posy, bool status, int _remain);
+
 void sameTextureMultiSet(Object object[], const char *filename, double posx, double posy, bool status,int num);
 
 void printNode(Node *node);
@@ -90,8 +96,14 @@ void limitPosObject(Object *obj, int offset);
 
 bool judgeHit(Object *obj1, Object *obj2, int offset);
 
+bool judgeHit_mainchara(Object *hero, Object *obj2, int offset);
+
+void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0);
+
 void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0, const char *prestring);
 
 void initDoubleArray(double array[], int num);
+
+int judgeSign(int num);
 
 #endif

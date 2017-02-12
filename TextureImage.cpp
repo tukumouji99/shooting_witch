@@ -88,7 +88,7 @@ int MakeTextureFromImage(TextureImage *tex, ImageData *img)
 
   glError();
 
-  fprintf(stderr, "MakeTextureFromImage: texture created\n");
+  // fprintf(stderr, "MakeTextureFromImage: texture created\n");
 
   return 1;
 }
