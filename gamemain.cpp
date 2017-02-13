@@ -595,7 +595,7 @@ void keyboard(unsigned char key, int x, int y)
             }
         }
         else if(key == '\015'){
-            if(breakinput && namei){
+            if(breakinput && namei || !changerank){
                 namei++;
                 putname[namei] = '\0';
                 return0 = true;
