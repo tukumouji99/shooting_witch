@@ -1,6 +1,7 @@
 #include<cstdio>
 #include<cstdlib>
 #include<cmath>
+#include<cstring>
 #include<string>
 #include<new>
 #include<GL/glut.h>
@@ -91,16 +92,25 @@ bool changerank = true;
 bool return0 = false;
 
 void myInit();
+void idle();
+void keyboard(unsigned char key, int x, int y);
+void keyboardup(unsigned char key, int x, int y);
+void specialkey(int key, int x, int y);
+void specialkeyup(int key, int x, int y);
+void mouse(int button, int state, int x, int y);
+void reshape(int w, int h);
 
 void init(void)
 {
-    myInit();
     //白
     // glClearColor(1.0, 1.0, 1.0, 1.0);   /* ウィンドウを消去するときの色を設定 */
+
+    glClearColor(0.005, 0, 0.15, 1.0);
+
+    myInit();
 }
 
 void myInit(void){
-    glClearColor(0.005, 0, 0.15, 1.0);
 
 
     initDoubleArray(enemy_Prevtime, ENEMY_NUM);
@@ -483,11 +493,11 @@ void display(void)
         else if(breakinput){
             if(changerank){
                 for(int i = RANK_NUM; i > replace; --i){
-                    initString(player[i].name, 32);
+                    // initString(player[i].name, 32);
                     strcpy(player[i].name, player[i - 1].name);
                     player[i].score = player[i - 1].score;
                 }
-                initString(player[replace].name, 32);
+                // initString(player[replace].name, 32);
                 strcpy(player[replace].name, putname);
                 player[replace].score = score;
                 changerank = false;
@@ -511,10 +521,22 @@ void display(void)
                 for(int i = 0; i < RANK_NUM; i++){
                     fprintf(rankrec, "%d %s %.0lf\n", player[i].rank, player[i].name, player[i].score);
                 }
-                char start[256];
-                strcpy(start, "push ESC or q to quit");
-                glColor3d(1.0, 1.0, 1.0);
-                DrawString(start, 21, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2);            
+                // char start[256];
+                // strcpy(start, "push ESC or q to quit");
+                // glColor3d(1.0, 1.0, 1.0);
+                // DrawString(start, 21, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2);
+                myInit();           
+                displaymode = 0; 
+                glutDisplayFunc(display);
+                glutIdleFunc(idle);
+                glutKeyboardFunc(keyboard);
+                glutKeyboardUpFunc(keyboardup);
+                glutSpecialFunc(specialkey);
+                glutSpecialUpFunc(specialkeyup);
+                glutMouseFunc(mouse);
+                glutReshapeFunc(reshape);
+                init();
+                glutMainLoop();
             }
         }
     }
