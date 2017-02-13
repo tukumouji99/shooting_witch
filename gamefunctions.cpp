@@ -24,7 +24,7 @@ Enemy::Enemy(){
     shown = false;
 }
 
-Enemy::Enemy(const char *filename, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _velocity, double _interval, double _appeartime, bool _status){
+Enemy::Enemy(const char *filename, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _bulletvelocity, double _interval, double _appeartime, double _velocity, bool _status){
     InitImageData(&img);
 
     if(LoadPPMImage_alpha(filename, &img)){
@@ -39,8 +39,32 @@ Enemy::Enemy(const char *filename, double _posx, double _posy, int _hp, int _sho
     bulletInterval  = _interval;
     appearTime      = _appeartime;
     bulletnum       = _bulletnum;
-    bulletVelocity  = _velocity;
+    bulletVelocity  = _bulletvelocity;
     shootmode       = _shootmode;
+    velocity        = _velocity;
+}
+
+Enemy::Enemy(ImageData *original_img, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _bulletvelocity, double _interval, double _appeartime, double _velocity, bool _status){
+    InitImageData(&img);
+
+    if(original_img->data != NULL){
+        img.width     = original_img->width;
+        img.height    = original_img->height;
+        img.channels  = original_img->channels;
+        img.data      = original_img->data;
+        MakeTextureFromImage(&tex, &img);
+    }
+
+    posx    = _posx;
+    posy    = _posy;
+    status  = _status;
+    hp      = _hp;
+    bulletInterval  = _interval;
+    appearTime      = _appeartime;
+    bulletnum       = _bulletnum;
+    bulletVelocity  = _bulletvelocity;
+    shootmode       = _shootmode;
+    velocity        = _velocity;
 }
 
 void Enemy::display(){
@@ -58,7 +82,7 @@ void Enemy::setpos(double _posx, double _posy, int _hp, bool _status){
     status  = _status;
 }
 
-void Enemy::move(int windowWidth, double velocity){
+void Enemy::move(int windowWidth){
     if(GetSecond() > appearTime){
         if(status){
             posx -= velocity;
@@ -95,6 +119,10 @@ void Enemy::presetbullet(const char *filename){
     sameTextureMultiSet(E_bullet, filename, posx, posy, false, E_BULLET_NUM);
 }
 
+void Enemy::presetbullet(ImageData *original_image){
+    sameTextureMultiSet(E_bullet, original_image, posx, posy, false, E_BULLET_NUM);
+}
+
 void Enemy::setbullet(){
     for(int i = 0; i < E_BULLET_NUM; i++){
         setPosObject(&E_bullet[i], posx, posy, false);
@@ -120,6 +148,11 @@ void Enemy::shootbullet(Object *obj){
                         srand(shooted);
                         bulletVector[i].dirx    = bulletVelocity * cos(angle + rand()%45 / 360.0 * 2 * M_PI);
                         bulletVector[i].diry    = bulletVelocity * sin(angle + rand()%45 / 360.0 * 2 * M_PI);
+                    }
+                    else if(shootmode == 3){
+                        angle = atan2((obj->posy + obj->img.height / 2) - (posy), (obj->posx + obj->img.width / 2) - posx);
+                        bulletVector[i].dirx    = bulletVelocity * cos(angle + 2 * M_PI / bulletnum * shooted + shooted * 5 / 360.0 * 2 * M_PI);
+                        bulletVector[i].diry    = bulletVelocity * sin(2 * M_PI / bulletnum * shooted + shooted * 5 / 360.0 * 2 * M_PI);
                     }
                     setPosObject(&E_bullet[i], posx,posy, true);
                     shooted++;
@@ -218,6 +251,21 @@ void sameTextureMultiSet(Object object[],const char *filename, double posx, doub
         object[i].img.height    = object[0].img.height;
         object[i].img.channels  = object[0].img.channels;
         object[i].img.data      = object[0].img.data;
+        
+        // FlipImageData(&object[i].img);
+        MakeTextureFromImage(&object[i].tex, &object[i].img);
+        setPosObject(&object[i], posx, posy, status);
+    }
+}
+
+void sameTextureMultiSet(Object object[], ImageData *original_image, double posx, double posy, bool status, int num){
+
+    for(int i = 0; i < num; i++){
+        InitImageData(&object[i].img);
+        object[i].img.width     = original_image->width;
+        object[i].img.height    = original_image->height;
+        object[i].img.channels  = original_image->channels;
+        object[i].img.data      = original_image->data;
         
         // FlipImageData(&object[i].img);
         MakeTextureFromImage(&object[i].tex, &object[i].img);
@@ -399,6 +447,12 @@ void DrawString(char *str, int length, void *font, int windowWidth, int windowHe
 void initDoubleArray(double array[], int num){
     for(int i = 0; i < num; i++){
         array[i] = 0.0;
+    }
+}
+
+void initString(char str[], int num){
+    for(int i = 0; i < num; i++){
+        str[i] = '\0';
     }
 }
 

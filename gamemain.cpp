@@ -45,9 +45,15 @@ Object heroin;
 Object bullet[PLAYER_SHOT_MAX];
 double bullet_Prevtime = 0.0;
 
-#define ENEMY_IMAGE "mon_272_reversed.ppm"
-#define ENEMY_NUM 6
-#define ENEMY_HP 20
+
+#define ENEMY_NUM 64
+#define ENEMY_IMAGE1 "reversed_enemy1.ppm"
+#define ENEMY_IMAGE2 "reversed_enemy2.ppm"
+#define ENEMY_IMAGE3 "reversed_enemy3.ppm"
+#define ENEMY_IMAGE4 "reversed_enemy4.ppm"
+#define ENEMY_HP1 10
+#define ENEMY_HP2 50
+#define ENEMY_HP3 20
 #define ENEMY_BULLET_IMAGE "nc120941_fixed.ppm"
 #define ENEMY_BULLET_IMAGE2 "daen_gray_fixed.ppm"
 // #define ENEMY_BULLET_NUM 100
@@ -57,7 +63,10 @@ double enemy_Prevtime[ENEMY_NUM];
 // Enemy *enemy;
 // double *enemy_Prevtime;
 bool ebulleton = true;
-Vector enemypos[ENEMY_NUM] = {{g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}, {g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}, {g_WindowWidth, g_WindowHeight / 4 * 3}, {g_WindowWidth, g_WindowHeight / 4}};
+Vector enemypos[ENEMY_NUM] = {
+    {g_WindowWidth, g_WindowHeight / 4 * 3}, 
+    {g_WindowWidth, g_WindowHeight / 4}
+};
 
 #define DEFEAT_SCORE 500
 #define SCORE_DIGIT 10
@@ -66,37 +75,274 @@ double score = 0,
 char scorec[10];
 
 int displaymode = 0;
+int dis2come = 0;
+
+#define RANK_NUM 10
+double score_showtime = 0;
+Player player[RANK_NUM];
+
+#define FILE_RANK_RECORD "rankrecord.txt"
+FILE *rankrec;
+
+char putname[32];
+int namei = 0;
+bool breakinput = false;
+bool changerank = true;
+bool return0 = false;
+
+void myInit();
 
 void init(void)
 {
+    myInit();
     //白
     // glClearColor(1.0, 1.0, 1.0, 1.0);   /* ウィンドウを消去するときの色を設定 */
+}
+
+void myInit(void){
     glClearColor(0.005, 0, 0.15, 1.0);
+
 
     initDoubleArray(enemy_Prevtime, ENEMY_NUM);
 
-    setTextureObject(&heroin, "hero2.ppm", 0, 0, true, 3);
-    heroin.img.width     /= 1.5;
-    heroin.img.height    /= 1.5;
+    setTextureObject(&heroin, "hero3.ppm", 0, 0, true, 5);
+    // heroin.img.width     /= 1.5;
+    // heroin.img.height    /= 1.5;
 
     sameTextureMultiSet(bullet, "hero_bullet.ppm", 0, 0, false, PLAYER_SHOT_MAX);
     // sameTextureMultiSet(enemy, ENEMY_IMAGE, g_WindowWidth, g_WindowHeight / 4 * 3, true, ENEMY_NUM);
 
-    FILE *fin;
     // enemy = new Enemy[ENEMY_NUM];
     // enemy_Prevtime = new double[ENEMY_NUM];
+    bool first = true;
+    int firstnum;
+    double beforeTime;
     for(int i = 0; i < ENEMY_NUM; i++){
-        if(i < 2){
-            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 0, 10, 3, 1000, 2, true);
-            enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+        if(i < 10){
+            beforeTime = 2 + (int)(i / 2);
+            if(first){
+                new( &enemy[i] ) Enemy(ENEMY_IMAGE1 , enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP1, 1, 3, 2, 5000, beforeTime, 1, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                // printf("else!!!\n");
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP1, 1, 1, 2, 5000, beforeTime, 1, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 9){
+                    first = true;
+                }
+            }
         }
-        else if(i < 4){
-            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 2, 4, 10, 500, 5, true);
-            enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+        else if(10 <= i && i < 14){
+            beforeTime = 10 + (int)((i - 10) / 2) * 2;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE2, enemypos[i%2].dirx, g_WindowHeight / 2 - (enemypos[i%2].diry - g_WindowHeight) / 4, ENEMY_HP2, 0, 4, 1, 4000, beforeTime, 0.5, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                // printf("speed:%d\n",2 - i + firstnum);
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[i%2].dirx, g_WindowHeight / 2 - (enemypos[i%2].diry - g_WindowHeight) / 4, ENEMY_HP2, 0, 4, 1, 4000, beforeTime, 0.5, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 13){
+                    first = true;
+                }
+            }
         }
-        else{
-            new( &enemy[i] ) Enemy( ENEMY_IMAGE, enemypos[i].dirx, enemypos[i].diry, ENEMY_HP, 1, 1, 10, 500, 10, true);
-            enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+        else if(14 <= i && i < 18){
+            beforeTime = 18 + (int)((i - 10) / 2);
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE3, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP3 + 20, 0, 10, 5, 4000, beforeTime, 1, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP3 + 20, 0, 10, 5, 4000, beforeTime, 1, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 17){
+                    first = true;
+                }
+            }
+        }
+        else if(18 <= i && i < 20){
+            beforeTime = 28 + (i - 18);
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE1, enemypos[0].dirx, enemypos[0].diry, ENEMY_HP1, 1, 1, 5, 1800, beforeTime, 3, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[0].dirx, enemypos[0].diry, ENEMY_HP3, 1, 1, 5, 1800, beforeTime, 3, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 19){
+                    first = true;
+                }
+            }
+        }
+        else if(20 <= i && i < 22){
+            beforeTime = 30 + i - 20;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE2, enemypos[1].dirx, enemypos[1].diry, ENEMY_HP1, 1, 1, 5, 1200, beforeTime, 3, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[1].diry, ENEMY_HP3, 1, 1, 5, 1800, beforeTime, 3, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 21){
+                    first = true;
+                }
+            }
+        }
+        else if(22 <= i && i < 24){
+            beforeTime = 32 + i - 22;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE1, enemypos[0].dirx, enemypos[0].diry, ENEMY_HP1, 1, 1, 5, 1200, beforeTime, 3, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[0].dirx, enemypos[0].diry, ENEMY_HP3, 1, 1, 5, 1800, beforeTime, 3, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 23){
+                    first = true;
+                }
+            }
+        }
+        else if(24 <= i && i < 26){
+            beforeTime = 34 + i - 24;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE1, enemypos[1].dirx, enemypos[1].diry, ENEMY_HP1, 1, 1, 5, 1200, beforeTime, 3, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[1].diry, ENEMY_HP3, 1, 1, 5, 1800, beforeTime, 3, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 25){
+                    first = true;
+                }
+            }
+        }
+        else if(26 <= i && i < 30){
+            beforeTime = 38 + i - 26;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE1, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP3, 2, 4, 5, 1800, beforeTime, 2, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP3, 2, 4, 5, 1800, beforeTime, 2, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 29){
+                    first = true;
+                }
+            }
+        }
+        else if(30 <= i && i < 34){
+            beforeTime = 42 + i - 30;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE2, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP3, 2, 4, 5, 1800, beforeTime, 2, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[i%2].dirx, enemypos[i%2].diry, ENEMY_HP3, 2, 4, 5, 1800, beforeTime, 2, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 33){
+                    first = true;
+                }
+            }
+        }
+        else if(34 <= i && i < 40){
+            beforeTime = 50;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE2, enemypos[i%2].dirx, enemypos[1].diry + (i - 34) * 70, ENEMY_HP1 - 3, 2, 4, 5, 1800, beforeTime, 1, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[1].diry + (i - 34) * 70, ENEMY_HP1 - 3, 2, 4, 5, 1800, beforeTime, 1, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 39){
+                    first = true;
+                }
+            }
+        }
+        else if(40 <= i && i < 46){
+            beforeTime = 54;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE2, enemypos[i%2].dirx, enemypos[0].diry - (i - 40) * 70, ENEMY_HP1 - 3, 2, 4, 5, 1800, beforeTime, 1, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[0].diry - (i - firstnum) * 70, ENEMY_HP1 - 3, 2, 4, 5, 1800, beforeTime, 1, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 45){
+                    first = true;
+                }
+            }
+        }
+        else if(46 <= i && i < 52){
+            beforeTime = 62;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE2, enemypos[i%2].dirx, enemypos[0].diry - (i - 40) * 70, ENEMY_HP1 - 3, 2, 6, 5, 1400, beforeTime, 2, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[0].diry - (i - firstnum) * 70, ENEMY_HP1 - 3, 2, 6, 5, 1400, beforeTime, 2, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 51){
+                    first = true;
+                }
+            }
+        }
+        else if(52 <= i && i < 58){
+            beforeTime = 66;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE1, enemypos[i%2].dirx, enemypos[1].diry + (i - 40) * 30, ENEMY_HP1 - 3, 2, 6, 5, 1400, beforeTime, 2, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[1].diry + (i - firstnum) * 30, ENEMY_HP1 - 3, 2, 6, 5, 1400, beforeTime, 2, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 57){
+                    first = true;
+                }
+            }
+        }
+        else if(58 <= i && i < 64){
+            beforeTime = 74;
+            if(first){
+                new( &enemy[i] ) Enemy( ENEMY_IMAGE1, enemypos[i%2].dirx, enemypos[0].diry - (i - 40) * 30, ENEMY_HP1 - 3, 2, 6, 5, 1400, beforeTime, 2, true);
+                enemy[i].presetbullet(ENEMY_BULLET_IMAGE);
+                first = false;
+                firstnum = i;
+            }
+            else{
+                new( &enemy[i] ) Enemy( &enemy[firstnum].img, enemypos[1].dirx, enemypos[0].diry - (i - firstnum) * 30, ENEMY_HP1 - 3, 2, 6, 5, 1400, beforeTime, 2, true);
+                enemy[i].presetbullet(&enemy[firstnum].E_bullet[0].img);
+                if(i == 63){
+                    first = true;
+                }
+            }
         }
     }
 
@@ -135,6 +381,10 @@ void display(void)
         strcpy(start, "push any key to start");
         glColor3d(1.0, 1.0, 1.0);
         DrawString(start, 21, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2);
+        strcpy(start, "Mirage Shooting");
+        glColor3d(1.0, 1.0, 1.0);
+        DrawString(start, 16, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 100, g_WindowHeight / 2 - 100);
+    
     }
 
     else if(displaymode == 1){
@@ -179,6 +429,94 @@ void display(void)
         char remain[3] = {'\0','\0','\0'};
         sprintf(remain, "%3d", heroin.remain);
         DrawString(remain, 3, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, 0, 18, "player:");
+
+        if(GetSecond() > 82){
+            displaymode = 2;
+        }
+    }
+
+    else if(displaymode == 2){
+        if(dis2come == 0){
+            // if(heroin.remain > 0){
+                score = score + heroin.remain * 1000;
+            // }
+            dis2come = 1;   
+        }
+        if(displayscore < score){
+                displayscore+=2;
+                score_showtime = GetTime();
+        }
+        sprintf(scorec, "%10.0lf", displayscore);
+        DrawString(scorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2, "your score:");
+    }
+    else if(displaymode == 3){
+        char ranking[256];
+        strcpy(ranking, "Ranking");
+        glColor3d(1.0, 1.0, 1.0);
+        DrawString(ranking, 7, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 20, g_WindowHeight / 5);
+        for(int i = 0; i < RANK_NUM; i++){
+            char rank[3], rscorec[SCORE_DIGIT];
+            sprintf(rank, "%3d", player[i].rank);
+            DrawString(rank, 3, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 100, g_WindowHeight / 5 + 30 + 20 * i);
+            DrawString(player[i].name, 32, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 50, g_WindowHeight / 5 + 30 + 20 * i);
+            sprintf(rscorec, "%10.0lf", player[i].score);
+            DrawString(rscorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 + 50, g_WindowHeight / 5 + 30 + 20 * i);
+        }
+    }
+    else if(displaymode == 4){
+        bool inputname = false;
+        int replace = 0;
+        for(int i = 0; i < RANK_NUM; i++){
+            if(score > player[i].score){
+                inputname = true;
+                replace = i;
+                break;
+            }
+        }
+        if(inputname && !breakinput){
+            char inputs[256];
+            strcpy(inputs, "Input your name");
+            glColor3d(1.0, 1.0, 1.0);
+            DrawString(inputs, 15, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 40, g_WindowHeight / 5);
+            DrawString(putname, namei, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 40, g_WindowHeight / 2);
+        }
+        else if(breakinput){
+            if(changerank){
+                for(int i = RANK_NUM; i > replace; --i){
+                    initString(player[i].name, 32);
+                    strcpy(player[i].name, player[i - 1].name);
+                    player[i].score = player[i - 1].score;
+                }
+                initString(player[replace].name, 32);
+                strcpy(player[replace].name, putname);
+                player[replace].score = score;
+                changerank = false;
+            }
+            if(!return0){
+                char ranking[256];
+                strcpy(ranking, "Ranking");
+                glColor3d(1.0, 1.0, 1.0);
+                DrawString(ranking, 7, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 20, g_WindowHeight / 5);
+                for(int i = 0; i < RANK_NUM; i++){
+                    char rank[3], rscorec[SCORE_DIGIT];
+                    sprintf(rank, "%3d", player[i].rank);
+                    DrawString(rank, 3, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 100, g_WindowHeight / 5 + 30 + 20 * i);
+                    DrawString(player[i].name, 32, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 50, g_WindowHeight / 5 + 30 + 20 * i);
+                    sprintf(rscorec, "%10.0lf", player[i].score);
+                    DrawString(rscorec, SCORE_DIGIT, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 + 50, g_WindowHeight / 5 + 30 + 20 * i);
+                }
+            }
+            if(return0){
+                rankrec = fopen(FILE_RANK_RECORD, "w");
+                for(int i = 0; i < RANK_NUM; i++){
+                    fprintf(rankrec, "%d %s %.0lf\n", player[i].rank, player[i].name, player[i].score);
+                }
+                char start[256];
+                strcpy(start, "push ESC or q to quit");
+                glColor3d(1.0, 1.0, 1.0);
+                DrawString(start, 21, GLUT_BITMAP_HELVETICA_18, g_WindowWidth, g_WindowHeight, g_WindowWidth / 2 - 120, g_WindowHeight / 2);            
+            }
+        }
     }
 
     glutSwapBuffers();
@@ -194,10 +532,10 @@ void idle(void)
         {
             
             moveObject(&heroin, VELO_SPEED);
-            limitPosObject(&heroin, 200);
+            limitPosObject(&heroin, 10);
 
             for(int i = 0; i < ENEMY_NUM; i++){
-                enemy[i].move(g_WindowWidth, 2);
+                enemy[i].move(g_WindowWidth);
                 enemy[i].shootbullet(&heroin);
                 enemy[i].movebullet();
                 enemy[i].judgebullet(g_WindowWidth, g_WindowHeight);
@@ -238,6 +576,9 @@ void keyboard(unsigned char key, int x, int y)
         case 'z':
             keyz = true;
             break;
+        case '3':
+            // displaymode = 3;
+            break;
         case 'q':   /* キーボードの 'q' 'Q' 'ESC' を押すとプログラム終了 */
         case 'Q':
         case '\033':
@@ -245,11 +586,34 @@ void keyboard(unsigned char key, int x, int y)
             exit(-1);
             break;
     }
+    if(displaymode == 4){
+        printf("namei: %d\n", namei);
+        if(key == '\010'){
+            putname[namei] = '\0';
+            if(namei > 0){
+                namei--;
+            }
+        }
+        else if(key == '\015'){
+            if(breakinput && namei){
+                namei++;
+                putname[namei] = '\0';
+                return0 = true;
+            }
+            breakinput = true;
+        }
+        else{
+            putname[namei] = key;
+            namei++;
+        }
+    }
     if(displaymode == 0){
         StartTimer();
+        displaymode = 1;
     }
-
-    displaymode = 1;
+    if(displaymode == 2){
+        displaymode = 4;
+    }
 
     glutPostRedisplay();    /* ウィンドウ描画関数を呼ぶ */
 }
@@ -318,10 +682,20 @@ void reshape(int w, int h)
  
 int main(int argc, char *argv[])
 {
+    if((rankrec = fopen(FILE_RANK_RECORD, "r+")) == NULL){
+        fprintf(stderr, "cannot open %s\n", FILE_RANK_RECORD);
+        fprintf(stderr, "please make %s\n", FILE_RANK_RECORD);
+        exit(1);
+    }
+
+
+    for(int i = 0; i < RANK_NUM; i++){
+        fscanf(rankrec, "%d %s %lf", &player[i].rank, player[i].name, &player[i].score);
+    }    
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
     glutInitWindowSize(g_WindowWidth, g_WindowHeight);
-    glutCreateWindow("shooting_witch");
+    glutCreateWindow("mirage_shooting");
     glutDisplayFunc(display);
     glutIdleFunc(idle);
     glutKeyboardFunc(keyboard);

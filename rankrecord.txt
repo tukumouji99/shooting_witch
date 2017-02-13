@@ -1,0 +1,10 @@
+1 tukumo10 35500
+2 aaaaaa 10000
+3 bbbbbb 9000
+4 cccccc 8000
+5 dddddd 7000
+6 eeeeee 6000
+7 ffffff 5000
+8 gggggg 4000
+9 hhhhhh 3000
+10 iiiiii 2000

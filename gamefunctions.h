@@ -18,10 +18,16 @@ typedef struct{
     double dirx, diry;
 } Vector;
 
+typedef struct{
+    int rank;
+    char name[32];
+    double score;
+} Player;
+
 class Enemy{
     private:
-        ImageData img;
     public:
+        ImageData img;
         TextureImage tex;
         double posx, posy;
         int hp;
@@ -30,12 +36,14 @@ class Enemy{
         Vector bulletVector[ E_BULLET_NUM ];
         double shootedtime ,bulletInterval, bulletVelocity;
         int bulletnum, shootmode;
-        double appearTime;
+        double appearTime, velocity;
         bool shown;
 
         Enemy();
 
-        Enemy(const char *filename, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _velocity, double _interval, double _appeartime, bool _status);
+        Enemy(const char *filename, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _bulletvelocity, double _interval, double _appeartime, double _velocity, bool _status);
+
+        Enemy(ImageData *original_img, double _posx, double _posy, int _hp, int _shootmode, int _bulletnum, double _bulletvelocity, double _interval, double _appeartime, double _velocity, bool _status);
 
         Enemy(double _posx, double _posy, bool _status,int _hp);
 
@@ -43,13 +51,15 @@ class Enemy{
 
         void setpos(double _posx, double _posy, int _hp, bool _status);
 
-        void move(int windowWidth, double velocity);
+        void move(int windowWidth);
 
         bool judgeHit(Object *obj, int offset);
 
         bool judgeAlive();
 
         void presetbullet(const char *filename);
+
+        void presetbullet(ImageData *original_image);
 
         void setbullet();
 
@@ -80,6 +90,8 @@ void setTextureObject(Object *obj, const char *filename, double posx, double pos
 
 void sameTextureMultiSet(Object object[], const char *filename, double posx, double posy, bool status,int num);
 
+void sameTextureMultiSet(Object object[], ImageData *original_image, double posx, double posy, bool status, int num);
+
 void printNode(Node *node);
 
 //(0,0)にオブジェクトを移動
@@ -104,6 +116,8 @@ void DrawString(char *str, int length, void *font, int windowWidth, int windowHe
 void DrawString(char *str, int length, void *font, int windowWidth, int windowHeight, int x0, int y0, const char *prestring);
 
 void initDoubleArray(double array[], int num);
+
+void initString(char str[], int num);
 
 int judgeSign(int num);
 
